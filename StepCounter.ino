@@ -1,4 +1,8 @@
+#if defined(ARDUINO_M5Stick_C)
+#include <M5StickC.h>
+#elif defined(ARDUINO_M5Stick_C_Plus)
 #include <M5StickCPlus.h>
+#endif
 
 float accX = 0;
 float accY = 0;
