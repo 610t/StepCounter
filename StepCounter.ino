@@ -4,19 +4,24 @@
 #include <M5StickCPlus.h>
 #endif
 
-float accX = 0;
-float accY = 0;
-float accZ = 0;
-
 void setup() {
   M5.begin();
+
+  // Improve battery life.
+  M5.Axp.ScreenBreath(8);
+  setCpuFrequencyMhz(10);
+
+  // Display setting
   M5.Lcd.setRotation(1);
   M5.Lcd.fillScreen(BLACK);
-  M5.Lcd.setTextSize(2);
+  M5.Lcd.setTextSize(5);
+
+  // IMU & LED
   M5.IMU.Init();
   pinMode(M5_LED, OUTPUT);
 }
 
+// Variables for step counter
 int step = 0;
 float total = 0;
 int count = 0;
@@ -26,10 +31,16 @@ boolean state = false;
 boolean old_state = false;
 
 void loop() {
-  M5.IMU.getAccelData(&accX, &accY, &accZ);
+  // Accelerometer value for x,y,z axis.
+  float accX = 0;
+  float accY = 0;
+  float accZ = 0;
 
+  // Get accel.
+  M5.IMU.getAccelData(&accX, &accY, &accZ);
   float accel = sqrt(accX * accX + accY * accY + accZ * accZ);
 
+  // Calibration for average acceleration.
   if (count < 100) {
     total += accel;
     count += 1;
@@ -39,27 +50,27 @@ void loop() {
     total = avg;
     count = 1;
   }
+
+  // When current accel. is ...
   if (accel > avg + width) {
     state = true;
   } else if (accel < avg - width) {
     state = false;
   }
+
+  // Count up step.
   if (!old_state && state) {
     step += 1;
-    // led on
-    digitalWrite(M5_LED, LOW);
+    digitalWrite(M5_LED, LOW);  // led on
+
+    // Display step
+    M5.Lcd.setCursor(0, 0);
+    M5.Lcd.printf("Step:\n");
+    M5.Lcd.printf("%5d\n", step);
   } else {
-    // led off
-    digitalWrite(M5_LED, HIGH);
+    digitalWrite(M5_LED, HIGH); // led off
   }
   old_state = state;
-
-  // Display
-  M5.Lcd.setCursor(0, 0);
-  M5.Lcd.printf("Step:%d\n", step);
-  M5.Lcd.printf("Count:%3d\n", count);
-  M5.Lcd.printf("Accel:%f\n", accel);
-  M5.Lcd.printf("Avg:%f\n", avg);
 
   delay(50);
 }
